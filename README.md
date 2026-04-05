@@ -84,7 +84,8 @@ llm-inference-bench/
 │   ├── __init__.py
 │   └── test_metrics.py    # 12 unit tests for metrics module
 ├── scripts/
-│   └── run_benchmark.sh
+│   └── run_benchmark.sh   # GPU pod helper — runs dev or prod benchmark suite
+├── .dockerignore          # Excludes venv, frontend/, .git, results, editor files
 ├── Dockerfile             # NVIDIA CUDA 12.1 + Python 3.10
 ├── requirements.txt
 └── main.py                # Entry point — runs full benchmark suite
@@ -133,6 +134,8 @@ Runs `facebook/opt-125m` in FP16 with minimal batch/token configs — fast sanit
 
 ```bash
 python main.py
+# or using the shell helper:
+bash scripts/run_benchmark.sh dev
 ```
 
 ### Production Benchmarks (GPU, Mistral-7B)
@@ -145,7 +148,11 @@ config = BenchmarkConfig.production_config()
 
 ```bash
 python main.py
+# or using the shell helper:
+bash scripts/run_benchmark.sh prod
 ```
+
+The `run_benchmark.sh` script handles venv creation, dependency installation, and config switching automatically — useful when SSH-ing into a fresh RunPod or Lambda instance.
 
 Output files are saved to `results/` with a timestamp:
 
