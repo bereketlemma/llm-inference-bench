@@ -1,0 +1,10 @@
+{
+  "id": "compare-a100-mistral",
+  "label": "NVIDIA A100 - Mistral-7B",
+  "model": "Mistral-7B-v0.1",
+  "gpu": "NVIDIA A100 80GB",
+  "framework": "vLLM 0.16.0",
+  "avgP99": 3850.0,
+  "avgThroughput": 342.7,
+  "peakThroughput": 1024.0
+}

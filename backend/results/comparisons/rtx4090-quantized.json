@@ -1,0 +1,10 @@
+{
+  "id": "compare-rtx4090-quantized",
+  "label": "RTX 4090 - Mistral-7B INT8",
+  "model": "Mistral-7B-v0.1 (INT8-GPTQ)",
+  "gpu": "NVIDIA RTX 4090 24GB",
+  "framework": "vLLM 0.16.0",
+  "avgP99": 5240.0,
+  "avgThroughput": 195.3,
+  "peakThroughput": 585.9
+}
