@@ -23,3 +23,9 @@ Thumbs.db
 llm-inference-bench-guide (1).md
 
 frontend/node_modules/
+
+frontend/out/
+frontend/package-lock.json
+my-changes.*
+my-untracked-files.txt
+my-work-export.zip
