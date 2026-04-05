@@ -36,6 +36,9 @@ my-changes-status.txt
 my-untracked-files.txt
 my-work-export.zip
 
+# Duplicate backend/ directory (canonical code lives at root)
+backend/
+
 # Frontend build artifacts
 frontend/node_modules/
 frontend/.next/

@@ -1,5 +1,39 @@
 venv/
+.venv/
+env/
 __pycache__/
+*.py[cod]
 .pytest_cache/
-results/
+
+# Git and CI
 .git/
+.github/
+.gitignore
+
+# Local dev/guide files
+llm-inference-bench-guide (1).md
+COMMITS.md
+my-changes.*
+my-changes-status.txt
+my-untracked-files.txt
+my-work-export.zip
+
+# Generated results (mounted at runtime or rebuilt)
+results/*.json
+results/*.csv
+results/charts/*.png
+
+# Frontend (not needed in the Python benchmark image)
+frontend/
+
+# Editor and OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Tests (exclude from production image if desired)
+tests/
+
+# Duplicate backend/ directory
+backend/
