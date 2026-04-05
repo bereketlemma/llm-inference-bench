@@ -8,24 +8,45 @@ __pycache__/
 # Virtual environments
 venv/
 .venv/
+env/
 
-# Local outputs
+# Local benchmark outputs (generated at runtime)
 results/*.json
 results/*.csv
 results/charts/*.png
+backend/results/*.json
+backend/results/*.csv
+backend/results/charts/*.png
 
-# OS/editor
+# OS / editor
 .DS_Store
 Thumbs.db
 .vscode/
+.idea/
+*.swp
+*.swo
 
-# Local guide file (do not push)
+# Local dev/guide files (not for repo)
 llm-inference-bench-guide (1).md
+COMMITS.md
 
-frontend/node_modules/
-
-frontend/out/
-frontend/package-lock.json
+# Personal work-export and patch files
 my-changes.*
+my-changes-status.txt
 my-untracked-files.txt
 my-work-export.zip
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/package-lock.json
+frontend/npm-debug.log*
+
+# Docker
+*.tar
+
+# Secrets / env files
+.env
+.env.*
+!.env.example
