@@ -1,0 +1,10 @@
+p50_latency_ms,p99_latency_ms,tokens_per_second,requests_per_second,batch_size,output_tokens,num_runs,quantization,model
+3587.0,3590.0,17.9,1.0,1,128,10,fp16,mistralai/Mistral-7B-v0.1
+7169.7,7176.2,17.9,0.5,1,256,10,fp16,mistralai/Mistral-7B-v0.1
+14353.3,14355.3,17.8,0.25,1,512,10,fp16,mistralai/Mistral-7B-v0.1
+1872.0,1880.0,68.5,2.14,4,128,10,fp16,mistralai/Mistral-7B-v0.1
+3740.0,3760.0,68.3,1.07,4,256,10,fp16,mistralai/Mistral-7B-v0.1
+7520.0,7540.0,68.0,0.53,4,512,10,fp16,mistralai/Mistral-7B-v0.1
+1920.0,1940.0,133.9,4.17,8,128,10,fp16,mistralai/Mistral-7B-v0.1
+3840.0,3860.0,133.5,2.08,8,256,10,fp16,mistralai/Mistral-7B-v0.1
+30590.4,30600.1,133.9,0.26,8,512,10,fp16,mistralai/Mistral-7B-v0.1
