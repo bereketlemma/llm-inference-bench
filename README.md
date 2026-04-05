@@ -1,5 +1,7 @@
 # llm-inference-bench
 
+[![CI](https://github.com/bereketlemma/llm-inference-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/bereketlemma/llm-inference-bench/actions/workflows/ci.yml)
+
 A production-grade LLM inference benchmarking framework built on [vLLM](https://github.com/vllm-project/vllm). Measures throughput, latency percentiles (p50/p90/p99), and requests/sec across quantization formats (FP16, AWQ-INT4 Marlin) and batch sizes on open-source models. Includes an interactive Next.js dashboard for visualizing results.
 
 **Live dashboard → [bench.bereketlemma.com](https://bench.bereketlemma.com/)**  

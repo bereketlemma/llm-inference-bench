@@ -118,6 +118,34 @@ class TestCalculateMetrics:
         # 4 requests / 2 seconds = 2 req/s
         assert abs(result["requests_per_second"] - 2.0) < 1e-6
 
+    def test_num_runs_matches_input(self):
+        """num_runs in output should equal the number of latency samples."""
+        latencies = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7]
+        token_counts = [100] * 7
+
+        result = calculate_metrics(
+            latencies=latencies,
+            token_counts=token_counts,
+            batch_size=1,
+            output_tokens=100,
+        )
+
+        assert result["num_runs"] == 7
+
+    def test_std_deviation_positive_for_varying_latencies(self):
+        """Std deviation should be > 0 when latencies differ."""
+        latencies = [0.1, 0.2, 0.3, 0.4, 0.5]
+        token_counts = [100] * 5
+
+        result = calculate_metrics(
+            latencies=latencies,
+            token_counts=token_counts,
+            batch_size=1,
+            output_tokens=100,
+        )
+
+        assert result["std_latency_ms"] > 0
+
 
 class TestComputeSpeedup:
 
