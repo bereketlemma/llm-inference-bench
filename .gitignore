@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# Local outputs
+results/*.json
+results/*.csv
+results/charts/*.png
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Local guide file (do not push)
+llm-inference-bench-guide (1).md
