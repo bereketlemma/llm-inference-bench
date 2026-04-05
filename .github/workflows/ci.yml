@@ -18,7 +18,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
       - name: Install dependencies
@@ -26,10 +26,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest numpy pandas matplotlib pyyaml
       - name: Run unit tests
-        run: cd backend && pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=short
       - name: Check code structure
         run: |
-          cd backend
           python -c "from benchmark.metrics import calculate_metrics, compute_speedup; print('Metrics OK')"
           python -c "from benchmark.config import BenchmarkConfig; print('Config OK')"
 
@@ -44,6 +43,6 @@ jobs:
         run: pip install flake8
       - name: Run linter
         run: >
-          flake8 backend/benchmark/ backend/tests/ backend/visualize/ backend/main.py
+          flake8 benchmark/ tests/ visualize/ main.py
           --max-line-length=100 --ignore=E501,E402
 
