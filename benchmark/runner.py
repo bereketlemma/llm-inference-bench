@@ -130,10 +130,10 @@ def run_benchmark_suite(config: BenchmarkConfig) -> List[dict]:
         model_name = model_and_quant["model"]
         quant_arg = model_and_quant["quantization"]
 
-        logger.info(f"\n{'='*50}")
+        logger.info(f"\n{'=' * 50}")
         logger.info(f"Benchmarking quantization: {quantization_label}")
         logger.info(f"Model: {model_name}")
-        logger.info(f"{'='*50}")
+        logger.info(f"{'=' * 50}")
 
         try:
             llm = load_model(model_name, quant_arg)
