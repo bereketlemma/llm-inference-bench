@@ -3,8 +3,6 @@ Unit tests for metrics calculation module.
 Run with: pytest tests/
 """
 
-import pytest
-import numpy as np
 from benchmark.metrics import calculate_metrics, compute_speedup
 
 
