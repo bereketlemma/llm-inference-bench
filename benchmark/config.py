@@ -4,7 +4,7 @@ Supports YAML config files and programmatic configuration.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any, List
+from typing import Dict, Any, List
 import yaml
 
 
