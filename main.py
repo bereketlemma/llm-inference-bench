@@ -92,8 +92,8 @@ def main():
         print("INT4-AWQ vs FP16 SPEEDUP")
         print("=" * 60)
         print(f"Throughput speedup:      {speedup['throughput_speedup']:.2f}x")
-        print(f"P99 latency reduction:   {speedup['p99_latency_reduction']*100:.1f}%")
-        print(f"P50 latency reduction:   {speedup['p50_latency_reduction']*100:.1f}%")
+        print(f"P99 latency reduction:   {speedup['p99_latency_reduction'] * 100:.1f}%")
+        print(f"P50 latency reduction:   {speedup['p50_latency_reduction'] * 100:.1f}%")
 
     logger.info("Benchmark complete.")
 
