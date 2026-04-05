@@ -1,4 +1,0 @@
-﻿?? backend/
-?? frontend/
-?? my-changes-status.txt
-?? my-changes.patch
