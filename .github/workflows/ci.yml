@@ -1,4 +1,4 @@
-name: Benchmark Regression Tests
+﻿name: Benchmark Regression Tests
 
 on:
   push:
@@ -34,12 +34,12 @@ jobs:
 
       - name: Run unit tests
         run: |
-          pytest tests/ -v --tb=short
+          cd backend && pytest tests/ -v --tb=short
 
       - name: Check code structure
         run: |
-          python -c "from benchmark.metrics import calculate_metrics, compute_speedup; print('Metrics OK')"
-          python -c "from benchmark.config import BenchmarkConfig; print('Config OK')"
+          python -c "import sys; sys.path.insert(0,"backend"); from benchmark.metrics import calculate_metrics, compute_speedup; print('Metrics OK')"
+          python -c "import sys; sys.path.insert(0,"backend"); from benchmark.config import BenchmarkConfig; print('Config OK')"
 
   lint:
     runs-on: ubuntu-latest
@@ -52,4 +52,4 @@ jobs:
       - name: Install linting tools
         run: pip install flake8
       - name: Run linter
-        run: flake8 benchmark/ tests/ visualize/ main.py --max-line-length=100 --ignore=E501,E402
+        run: flake8 backend/benchmark/ backend/tests/ backend/visualize/ backend/main.py --max-line-length=100 --ignore=E501,E402
