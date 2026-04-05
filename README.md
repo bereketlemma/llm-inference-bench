@@ -2,7 +2,7 @@
 
 A production-grade LLM inference benchmarking framework built on [vLLM](https://github.com/vllm-project/vllm). Measures throughput, latency percentiles (p50/p90/p99), and requests/sec across quantization formats (FP16, AWQ-INT4 Marlin) and batch sizes on open-source models. Includes an interactive Next.js dashboard for visualizing results.
 
-**Live dashboard → [bench.bereketlemma.com](https://bench.bereketlemma.com)**  
+**Live dashboard → [bench.bereketlemma.com](https://bench.bereketlemma.com/)**  
 Deployed on Vercel · Custom domain via Cloudflare
 
 ---
@@ -218,7 +218,7 @@ npm run start
 
 ### Deployment
 
-The dashboard is deployed at **[bench.bereketlemma.com](https://bench.bereketlemma.com)** via:
+The dashboard is deployed at **[bench.bereketlemma.com](https://bench.bereketlemma.com/)** via:
 
 - **Vercel** — connected to the `frontend/` directory of this repo; auto-deploys on every push to `main`
 - **Cloudflare** — custom domain `bereketlemma.com` is managed through Cloudflare DNS; a `CNAME` record points `bench` to the Vercel deployment URL
