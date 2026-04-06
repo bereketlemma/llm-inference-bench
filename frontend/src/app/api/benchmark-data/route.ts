@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { NextResponse } from "next/server";
+import { BENCHMARK_DATA as FALLBACK_BENCHMARK_DATA } from "../../../lib/benchmark-data";
 
 type BenchmarkConfig = {
   quant: string;
@@ -116,6 +117,30 @@ function summarizeRun(base: BenchmarkMetadata): RunSummary {
   };
 }
 
+function comparisonFromRun(run: RunSummary): ComparisonProfile {
+  return {
+    id: `run-${run.id}`,
+    label: `${run.date} ${run.gpu}`,
+    model: run.model,
+    gpu: run.gpu,
+    framework: run.framework,
+    avgP99: run.avgP99,
+    avgThroughput: run.avgThroughput,
+    peakThroughput: run.peakThroughput,
+  };
+}
+
+async function readTextFromFirstExistingPath(filePaths: string[]): Promise<string | null> {
+  for (const filePath of filePaths) {
+    try {
+      return await fs.readFile(filePath, "utf8");
+    } catch {
+      // Try next candidate path.
+    }
+  }
+  return null;
+}
+
 async function loadJsonArray<T>(dirPath: string): Promise<T[]> {
   try {
     const files = await fs.readdir(dirPath);
@@ -134,52 +159,78 @@ async function loadJsonArray<T>(dirPath: string): Promise<T[]> {
 
 export async function GET() {
   try {
-    const root = path.resolve(process.cwd(), "..");
-    const dataDir = path.join(root, "backend", "results", "Data");
-    const fp16Path = path.join(dataDir, "fp16_results.csv");
-    const awqPath = path.join(dataDir, "awq_marlin_results.csv");
+    const cwd = process.cwd();
+    const candidateDataDirs = [
+      path.join(cwd, "backend", "results", "Data"),
+      path.join(cwd, "results", "Data"),
+      path.join(cwd, "..", "backend", "results", "Data"),
+      path.join(cwd, "..", "results", "Data"),
+    ];
 
-    const [fp16Raw, awqRaw] = await Promise.all([
-      fs.readFile(fp16Path, "utf8"),
-      fs.readFile(awqPath, "utf8"),
-    ]);
+    const fp16Raw = await readTextFromFirstExistingPath(
+      candidateDataDirs.map((dir) => path.join(dir, "fp16_results.csv"))
+    );
+    const awqRaw = await readTextFromFirstExistingPath(
+      candidateDataDirs.map((dir) => path.join(dir, "awq_marlin_results.csv"))
+    );
 
-    const fp16Rows = parseCsv(fp16Raw).map((r) => ({
-      quant: "FP16",
-      batch: Number(r.batch_size),
-      tokens: Number(r.output_tokens),
-      p50: Number(r.p50_latency_ms),
-      // fp16 CSV has no p90 column, so we surface p99 in both p90/p99 slots.
-      p90: Number(r.p99_latency_ms),
-      p99: Number(r.p99_latency_ms),
-      throughput: Number(r.tokens_per_second),
-      rps: Number(r.requests_per_second),
-    }));
+    const hasCsvData = Boolean(fp16Raw && awqRaw);
 
-    const awqRows = parseCsv(awqRaw).map((r) => ({
-      quant: "INT4-AWQ",
-      batch: Number(r.batch_size),
-      tokens: Number(r.output_tokens),
-      p50: Number(r.p50_latency_ms),
-      p90: Number(r.p90_latency_ms),
-      p99: Number(r.p99_latency_ms),
-      throughput: Number(r.tokens_per_second),
-      rps: Number(r.requests_per_second),
-    }));
-
-    const payload: BenchmarkMetadata = {
-      model: "Mistral-7B-v0.1",
-      gpu: "NVIDIA L4 24GB",
-      framework: "vLLM 0.16.0",
-      date: new Date().toISOString().slice(0, 10),
-      configs: [...fp16Rows, ...awqRows],
-    };
+    const payload: BenchmarkMetadata = hasCsvData
+      ? {
+          model: "Mistral-7B-v0.1",
+          gpu: "NVIDIA L4 24GB",
+          framework: "vLLM 0.16.0",
+          date: new Date().toISOString().slice(0, 10),
+          configs: [
+            ...parseCsv(fp16Raw as string).map((r) => ({
+              quant: "FP16",
+              batch: Number(r.batch_size),
+              tokens: Number(r.output_tokens),
+              p50: Number(r.p50_latency_ms),
+              // fp16 CSV has no p90 column, so we surface p99 in both p90/p99 slots.
+              p90: Number(r.p99_latency_ms),
+              p99: Number(r.p99_latency_ms),
+              throughput: Number(r.tokens_per_second),
+              rps: Number(r.requests_per_second),
+            })),
+            ...parseCsv(awqRaw as string).map((r) => ({
+              quant: "INT4-AWQ",
+              batch: Number(r.batch_size),
+              tokens: Number(r.output_tokens),
+              p50: Number(r.p50_latency_ms),
+              p90: Number(r.p90_latency_ms),
+              p99: Number(r.p99_latency_ms),
+              throughput: Number(r.tokens_per_second),
+              rps: Number(r.requests_per_second),
+            })),
+          ],
+        }
+      : {
+          ...FALLBACK_BENCHMARK_DATA,
+          date: new Date().toISOString().slice(0, 10),
+        };
 
     const currentSummary = summarizeRun(payload);
-    const historyDir = path.join(root, "backend", "results", "history");
-    const comparisonsDir = path.join(root, "backend", "results", "comparisons");
-    const historyFromDisk = await loadJsonArray<RunSummary>(historyDir);
-    const comparisonsFromDisk = await loadJsonArray<ComparisonProfile>(comparisonsDir);
+    const historyDirs = [
+      path.join(cwd, "backend", "results", "history"),
+      path.join(cwd, "results", "history"),
+      path.join(cwd, "..", "backend", "results", "history"),
+      path.join(cwd, "..", "results", "history"),
+    ];
+    const comparisonDirs = [
+      path.join(cwd, "backend", "results", "comparisons"),
+      path.join(cwd, "results", "comparisons"),
+      path.join(cwd, "..", "backend", "results", "comparisons"),
+      path.join(cwd, "..", "results", "comparisons"),
+    ];
+
+    const historyBatches = await Promise.all(historyDirs.map((dir) => loadJsonArray<RunSummary>(dir)));
+    const comparisonBatches = await Promise.all(
+      comparisonDirs.map((dir) => loadJsonArray<ComparisonProfile>(dir))
+    );
+    const historyFromDisk = historyBatches.flat();
+    const comparisonsFromDisk = comparisonBatches.flat();
 
     const runHistory: RunSummary[] =
       historyFromDisk.length > 0
@@ -189,6 +240,7 @@ export async function GET() {
         : [currentSummary];
 
     const comparisonCandidates: ComparisonProfile[] = [
+      comparisonFromRun(currentSummary),
       ...DEFAULT_COMPARISON_PROFILES,
       ...comparisonsFromDisk,
     ].filter((c, i, arr) => arr.findIndex((x) => x.id === c.id) === i);
