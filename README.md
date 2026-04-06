@@ -1,6 +1,8 @@
 # llm-inference-bench
 
-Benchmarking framework for LLM inference using [vLLM](https://github.com/vllm-project/vllm). I built this to measure how much faster INT4 quantization actually is compared to full-precision FP16 on real hardware, and to have a structured way to test different configurations.
+Benchmarking framework for LLM inference using [vLLM](https://github.com/vllm-project/vllm).
+
+I built this to measure how much faster INT4 quantization actually is compared to full-precision FP16 on real hardware, and to have a structured way to test different configurations (batch size, sequence length, quantization format).
 
 **Dashboard:** [bench.bereketlemma.com](https://bench.bereketlemma.com/)
 
