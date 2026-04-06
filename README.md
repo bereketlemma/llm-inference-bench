@@ -1,322 +1,216 @@
 # llm-inference-bench
 
-[![CI](https://github.com/bereketlemma/llm-inference-bench/actions/workflows/ci.yml/badge.svg)](https://github.com/bereketlemma/llm-inference-bench/actions/workflows/ci.yml)
+Benchmarking framework for LLM inference using [vLLM](https://github.com/vllm-project/vllm). I built this to measure how much faster INT4 quantization actually is compared to full-precision FP16 on real hardware, and to have a structured way to test different configurations.
 
-A production-grade LLM inference benchmarking framework built on [vLLM](https://github.com/vllm-project/vllm). Measures throughput, latency percentiles (p50/p90/p99), and requests/sec across quantization formats (FP16, AWQ-INT4 Marlin) and batch sizes on open-source models. Includes an interactive Next.js dashboard for visualizing results.
-
-**Live dashboard → [bench.bereketlemma.com](https://bench.bereketlemma.com/)**  
-Deployed on Vercel · Custom domain via Cloudflare
+**Dashboard:** [bench.bereketlemma.com](https://bench.bereketlemma.com/)
 
 ---
 
-## Live Benchmark Results
+## What I found
 
-Benchmarks run on **NVIDIA L4 24GB** · **vLLM 0.16.0** · **April 5, 2026**  
-Models: `mistralai/Mistral-7B-v0.1` (FP16) vs `TheBloke/Mistral-7B-v0.1-AWQ` (INT4-AWQ Marlin)  
-10 measurement runs per configuration · 3 warmup runs · greedy decoding (temp=0.0)
+I ran Mistral-7B on an NVIDIA L4 (24GB) through 18 different configurations varying batch size, sequence length, and quantization format. Each config got 10 measurement runs after 3 warmup iterations, all with greedy decoding for reproducibility.
 
-### FP16 — Mistral-7B-v0.1
+**INT4 AWQ-Marlin is 3.35x faster than FP16 on average.** Peak throughput hit 452 tok/s at batch=8.
 
-| Batch | Tokens | P50 (ms) | P99 (ms) | Throughput (tok/s) | RPS |
-|------:|-------:|---------:|---------:|-------------------:|----:|
-| 1 | 128 | 3587.0 | 3590.0 | 17.9 | 1.00 |
-| 1 | 256 | 7169.7 | 7176.2 | 17.9 | 0.50 |
-| 1 | 512 | 14353.3 | 14355.3 | 17.8 | 0.25 |
-| 4 | 128 | 1872.0 | 1880.0 | 68.5 | 2.14 |
-| 4 | 256 | 3740.0 | 3760.0 | 68.3 | 1.07 |
-| 4 | 512 | 7520.0 | 7540.0 | 68.0 | 0.53 |
-| 8 | 128 | 1920.0 | 1940.0 | 133.9 | 4.17 |
-| 8 | 256 | 3840.0 | 3860.0 | 133.5 | 2.08 |
-| 8 | 512 | 30590.4 | 30600.1 | 133.9 | 0.26 |
+### FP16 baseline
 
-### INT4-AWQ Marlin — TheBloke/Mistral-7B-v0.1-AWQ
+| Batch | Tokens | P50 (ms) | P99 (ms) | Tok/s | Req/s |
+|------:|-------:|---------:|---------:|------:|------:|
+| 1 | 128 | 3,587 | 3,590 | 17.9 | 1.00 |
+| 1 | 256 | 7,170 | 7,176 | 17.9 | 0.50 |
+| 1 | 512 | 14,353 | 14,355 | 17.8 | 0.25 |
+| 4 | 128 | 1,872 | 1,880 | 68.5 | 2.14 |
+| 4 | 256 | 3,740 | 3,760 | 68.3 | 1.07 |
+| 4 | 512 | 7,520 | 7,540 | 68.0 | 0.53 |
+| 8 | 128 | 1,920 | 1,940 | 133.9 | 4.17 |
+| 8 | 256 | 3,840 | 3,860 | 133.5 | 2.08 |
+| 8 | 512 | 30,590 | 30,600 | 133.9 | 0.26 |
 
-| Batch | Tokens | P50 (ms) | P99 (ms) | Throughput (tok/s) | RPS |
-|------:|-------:|---------:|---------:|-------------------:|----:|
-| 1 | 128 | 2084.1 | 2086.5 | 61.4 | 0.48 |
-| 1 | 256 | 4201.2 | 4205.0 | 60.9 | 0.24 |
-| 1 | 512 | 8460.7 | 8464.2 | 60.5 | 0.12 |
-| 4 | 128 | 2180.1 | 2180.5 | 234.9 | 1.83 |
-| 4 | 256 | 4393.6 | 4395.1 | 233.1 | 0.91 |
-| 4 | 512 | 8990.1 | 8990.9 | 227.8 | 0.44 |
-| 8 | 128 | 2264.0 | 2265.7 | **452.3** | 3.53 |
-| 8 | 256 | 4590.0 | 4590.4 | 446.2 | 1.74 |
-| 8 | 512 | 9544.8 | 9548.0 | 429.1 | 0.84 |
+### INT4 AWQ-Marlin
 
-### Summary
+| Batch | Tokens | P50 (ms) | P99 (ms) | Tok/s | Req/s |
+|------:|-------:|---------:|---------:|------:|------:|
+| 1 | 128 | 2,084 | 2,087 | 61.4 | 0.48 |
+| 1 | 256 | 4,201 | 4,205 | 60.9 | 0.24 |
+| 1 | 512 | 8,461 | 8,464 | 60.5 | 0.12 |
+| 4 | 128 | 2,180 | 2,181 | 234.9 | 1.83 |
+| 4 | 256 | 4,394 | 4,395 | 233.1 | 0.91 |
+| 4 | 512 | 8,990 | 8,991 | 227.8 | 0.44 |
+| 8 | 128 | 2,264 | 2,266 | **452.3** | 3.53 |
+| 8 | 256 | 4,590 | 4,590 | 446.2 | 1.74 |
+| 8 | 512 | 9,545 | 9,548 | 429.1 | 0.84 |
 
-| Metric | Value |
+### The takeaway
+
+| | |
 |---|---|
-| INT4-AWQ throughput speedup (avg) | **3.35x** |
+| Throughput speedup (avg) | **3.35x** |
 | P99 latency reduction (avg) | **37.5%** |
-| Peak throughput (INT4-AWQ, BS=8, 128 tok) | **452.3 tok/s** |
-| Peak throughput (FP16, BS=8, 128 tok) | 133.9 tok/s |
+| Peak throughput (INT4, BS=8) | **452.3 tok/s** |
+| Peak throughput (FP16, BS=8) | 133.9 tok/s |
+
+The Marlin kernel makes a real difference here. I initially tried the standard AWQ kernel and it was actually *slower* than FP16 — turns out vLLM falls back to a naive dequantization path unless you explicitly use `awq_marlin`. That's the kind of thing you only learn by running the benchmarks yourself.
 
 ---
 
-## Project Structure
+## How it works
+
+The Python backend loads models through vLLM, runs them through a matrix of configs, and collects latency/throughput metrics. The Next.js frontend turns those numbers into something a human can actually understand.
 
 ```
 llm-inference-bench/
 ├── benchmark/
-│   ├── __init__.py
-│   ├── config.py          # BenchmarkConfig dataclass with dev/production presets
-│   ├── metrics.py         # p50/p90/p99, throughput, speedup calculations
-│   └── runner.py          # vLLM model loading and benchmark orchestration
+│   ├── config.py          # dev/production presets, YAML loading
+│   ├── metrics.py         # percentile math, speedup calculations
+│   └── runner.py          # vLLM model loading + benchmark loop
 ├── visualize/
-│   ├── __init__.py
-│   └── plot_results.py    # Matplotlib chart generation
-├── frontend/              # Next.js 14 interactive dashboard
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── page.tsx
-│   │   │   └── api/benchmark-data/route.ts   # API route serving CSV data
-│   │   ├── components/
-│   │   │   └── Dashboard.tsx  # Recharts visualizations, PDF export, hacker UI
-│   │   └── lib/
-│   │       └── benchmark-data.ts   # Typed benchmark data and computed summaries
-│   ├── package.json
-│   └── next.config.js
-├── results/
-│   ├── Data/
-│   │   ├── fp16_results.csv
-│   │   └── awq_marlin_results.csv
-│   └── charts/
-├── tests/
-│   ├── __init__.py
-│   └── test_metrics.py    # 12 unit tests for metrics module
-├── scripts/
-│   └── run_benchmark.sh   # GPU pod helper — runs dev or prod benchmark suite
-├── .dockerignore          # Excludes venv, frontend/, .git, results, editor files
+│   └── plot_results.py    # matplotlib charts
+├── frontend/              # Next.js dashboard (bench.bereketlemma.com)
+│   ├── src/app/           # pages + API route
+│   ├── src/components/    # Dashboard with Recharts
+│   └── src/lib/           # typed benchmark data
+├── results/Data/          # raw CSV files from actual runs
+├── tests/                 # 12 unit tests, no GPU needed
 ├── Dockerfile             # NVIDIA CUDA 12.1 + Python 3.10
-├── requirements.txt
-└── main.py                # Entry point — runs full benchmark suite
+├── main.py                # entry point
+└── requirements.txt
 ```
 
 ---
 
-## Setup
+## Running it yourself
 
-### Requirements
+### You need
 
 - Python 3.10+
-- NVIDIA GPU with CUDA support (**required** — vLLM has no CPU mode)
-- 24GB+ VRAM for Mistral-7B FP16 (L4, A10, A100, or equivalent)
-- ~16GB VRAM for the AWQ-INT4 variant
+- An NVIDIA GPU with CUDA (vLLM doesn't do CPU)
+- 24GB VRAM for FP16 Mistral-7B, ~16GB for AWQ variant
 
-> For local development and unit testing (no GPU), you can write and test the `benchmark/metrics.py`, `benchmark/config.py`, and `visualize/` modules without a GPU. The vLLM runner is only invoked at runtime. Use RunPod (~$0.20/hr A100), Lambda Labs, or Google Colab Pro for running actual benchmarks.
+If you don't have a local GPU, I used a Google Cloud L4 instance ($0.87/hr)  and the whole run cost about 3 dollars.
 
-### Backend
+If you are a student like me you can get $300 in free credits [here](https://cloud.google.com/free). which can be used to run benchmarks on different hardware.
+
+### Backend setup
 
 ```bash
 git clone https://github.com/bereketlemma/llm-inference-bench.git
 cd llm-inference-bench
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\Activate.ps1
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Frontend Dashboard
-
-```bash
-cd frontend
-npm install
-npm run dev         # http://localhost:3000
-```
-
-The dashboard reads benchmark data from `frontend/src/lib/benchmark-data.ts` as a fallback and from the `/api/benchmark-data` route when deployed.
-
----
-
-## Usage
-
-### Quick Validation (GPU, small model)
-
-Runs `facebook/opt-125m` in FP16 with minimal batch/token configs — fast sanity check:
+### Quick test (GPU, small model)
 
 ```bash
 python main.py
-# or using the shell helper:
-bash scripts/run_benchmark.sh dev
 ```
 
-### Production Benchmarks (GPU, Mistral-7B)
+This runs OPT-125M with minimal configs — takes about a minute. Good for making sure everything works.
 
-Edit `main.py` to enable the production config:
+### Full benchmarks
+
+Switch to production config in `main.py`:
 
 ```python
 config = BenchmarkConfig.production_config()
 ```
 
+Then run it. Takes 1-2 hours depending on GPU. The script saves results to `results/` with timestamps.
+
+You can also use the shell helper on cloud instances:
+
 ```bash
-python main.py
-# or using the shell helper:
 bash scripts/run_benchmark.sh prod
 ```
 
-The `run_benchmark.sh` script handles venv creation, dependency installation, and config switching automatically — useful when SSH-ing into a fresh RunPod or Lambda instance.
-
-Output files are saved to `results/` with a timestamp:
-
-- `results/benchmark_<timestamp>.json` — raw metrics per configuration
-- `results/benchmark_<timestamp>.csv` — same data in tabular form
-- `results/charts/` — latency, throughput, and batch-scaling charts (PNG)
-
-### YAML Config
-
-You can also drive the runner from a YAML file:
-
-```python
-config = BenchmarkConfig.from_yaml("my_config.yaml")
-```
-
-```yaml
-batch_sizes: [1, 4, 8, 16]
-output_token_lengths: [128, 256, 512]
-num_runs: 10
-warmup_runs: 3
-quantization_formats:
-  fp16:
-    model: mistralai/Mistral-7B-v0.1
-    quantization: null
-  int4-awq:
-    model: TheBloke/Mistral-7B-v0.1-AWQ
-    quantization: awq
-```
-
----
-
-## Configuration
-
-`BenchmarkConfig` is a dataclass with three built-in presets:
-
-| Preset | Model | Batch sizes | Token lengths | Runs |
-|---|---|---|---|---|
-| `development_config()` | `facebook/opt-125m` | [1, 2] | [32, 64] | 3 |
-| `production_config()` | `mistralai/Mistral-7B-v0.1` + AWQ | [1, 4, 8, 16] | [128, 256, 512] | 10 |
-| Default | Mistral-7B FP16 + AWQ | [1, 4, 8, 16] | [128, 256, 512] | 10 |
-
----
-
-## Frontend Dashboard
-
-The `frontend/` directory contains a Next.js 14 dashboard with:
-
-- **Latency charts** — p50/p90/p99 bar charts per quantization format
-- **Throughput charts** — tokens/sec across batch sizes
-- **Batch-size scaling** — FP16 vs INT4-AWQ throughput curve
-- **Stat cards** — animated speedup, peak throughput, P99 reduction
-- **PDF export** — one-click report download via jsPDF
-- **Run history** — compare multiple benchmark runs side-by-side
-- **Hacker terminal UI** — JetBrains Mono, green-on-black aesthetic
-
-Stack: Next.js 14, TypeScript, Recharts, TailwindCSS, lucide-react, jsPDF
+### Frontend
 
 ```bash
 cd frontend
-npm run build   # static export → out/
-npm run start
+npm install
+npm run dev   
 ```
-
-### Deployment
-
-The dashboard is deployed at **[bench.bereketlemma.com](https://bench.bereketlemma.com/)** via:
-
-- **Vercel** — connected to the `frontend/` directory of this repo; auto-deploys on every push to `main`
-- **Cloudflare** — custom domain `bereketlemma.com` is managed through Cloudflare DNS; a `CNAME` record points `bench` to the Vercel deployment URL
-
-To deploy your own fork:
-
-1. Import the repo into [Vercel](https://vercel.com) and set the **Root Directory** to `frontend`
-2. Add your custom domain in the Vercel project settings
-3. In Cloudflare DNS, add a `CNAME` record: `bench` → `cname.vercel-dns.com` (proxy off / DNS-only)
 
 ---
 
-## Methodology
+## The dashboard
 
-| Setting | Value |
+[bench.bereketlemma.com](https://bench.bereketlemma.com/) has tabs for latency breakdown, throughput by sequence length, batch scaling curves, a head-to-head comparison tool, and a raw data explorer where you can filter by batch size and token count. There's also a PDF export if someone wants a snapshot.
+
+Built with Next.js 14, TypeScript, Recharts, and Tailwind. The terminal aesthetic matches [my portfolio](https://bereketlemma.com).
+
+Deployed on Vercel with auto-deploy on push. Domain managed through Cloudflare.
+
+---
+
+## How I ran the benchmarks
+
+| | |
 |---|---|
-| Warmup runs | 3 (before measurement, eliminates cold-start bias) |
-| Measurement runs | 10 per configuration |
-| Decoding | Greedy (temperature=0.0) for reproducibility |
-| Quantization | Pre-quantized AWQ checkpoints (not runtime quantization) |
-| Kernel | AWQ-Marlin (fused dequant + GEMM, faster than standard AWQ) |
-| Metrics | p50, p90, p99 latency · tokens/sec · requests/sec |
+| GPU | NVIDIA L4 24GB (Google Cloud, us-west1-a) |
+| Engine | vLLM 0.16.0 |
+| Warmup | 3 iterations before measurement |
+| Measurement | 10 runs per config |
+| Decoding | Greedy (temp=0.0) |
+| Quantization | Pre-quantized AWQ checkpoint + Marlin kernel |
+| FP16 model | `mistralai/Mistral-7B-v0.1` |
+| INT4 model | `TheBloke/Mistral-7B-v0.1-AWQ` |
+
+I used the Marlin fused dequant+GEMM kernel for INT4. It's significantly faster than the default AWQ path in vLLM. 
+
+You have to specify `quantization="awq_marlin"` explicitly, otherwise vLLM uses the slower implementation even though it logs a message saying Marlin is available.
 
 ---
 
 ## Docker
 
 ```bash
-# Build (requires NVIDIA CUDA driver on host)
 docker build -t llm-inference-bench .
-
-# Run with GPU passthrough
 docker run --gpus all --rm llm-inference-bench
 ```
 
-The image is based on `nvidia/cuda:12.1.1-runtime-ubuntu22.04` with Python 3.10.
+Needs the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html) on the host.
+
+Pre-configured on RunPod, Lambda, and GCP Deep Learning VMs.
 
 ---
 
-## Testing
+## Tests
 
 ```bash
-pytest tests/              # runs 12 unit tests (no GPU required)
+pytest tests/ -v
 ```
 
-Tests cover:
-- `calculate_metrics` — latency conversion, throughput calculation, percentile ordering
-- `compute_speedup` — throughput and latency reduction ratios
-- Edge cases for batch size, run counts, and output token tracking
+12 tests covering the metrics module latency conversion, throughput calculation, percentile ordering, speedup ratios, edge cases.
 
-CI does not install vLLM (GPU dependency). Tests run on every push via GitHub Actions.
+ No GPU needed. Runs in CI on every push.
 
 ---
 
-## CI/CD
+## Config presets
 
-GitHub Actions (`.github/workflows/ci.yml`) runs on every push:
-1. `pytest tests/` — unit tests
-2. `flake8` — lint
+| Preset | Model | Batch sizes | Tokens | Runs |
+|---|---|---|---|---|
+| `development_config()` | OPT-125M | 1, 2 | 32, 64 | 3 |
+| `production_config()` | Mistral-7B + AWQ | 1, 4, 8 | 128, 256, 512 | 10 |
+
+Or load from YAML:
+
+```python
+config = BenchmarkConfig.from_yaml("my_config.yaml")
+```
 
 ---
 
-## Results Data
+## Raw data
 
-Raw CSV files are in `results/Data/`:
-- `fp16_results.csv` — 9 configurations (batch × tokens), 10 runs each
-- `awq_marlin_results.csv` — 9 configurations with full p50/p90/p99 metrics
+CSVs are in `results/Data/`. The AWQ file has full p50/p90/p99 with sub-millisecond precision from 10 runs per config. 
 
-These files are loaded by the Next.js API route (`frontend/src/app/api/benchmark-data/route.ts`) and served to the dashboard.
+The FP16 file has the same structure. Both get served to the dashboard through a Next.js API route.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
-
-## Models Tested
-
-- `facebook/opt-125m` — development validation
-- `mistralai/Mistral-7B-v0.1` — production benchmarks (FP16)
-- `TheBloke/Mistral-7B-v0.1-AWQ` — production benchmarks (INT4-AWQ)
-
-## Troubleshooting
-
-### vLLM import/install issues
-- vLLM requires CUDA and an NVIDIA GPU for real benchmark execution.
-- For non-GPU development, focus on tests and non-vLLM modules.
-
-### Docker build is slow
-- First build can be long due to large ML dependencies.
-- Use: `docker build --progress=plain -t llm-inference-bench .` to see detailed progress.
-
-### Container run without GPU is slow or hangs
-- Running full `main.py` without GPU is not a meaningful benchmark path.
-- Use containerized tests instead: `docker run --rm llm-inference-bench pytest tests/ -v`.
-
-## License
-
-MIT License. See the LICENSE file for full text.
+MIT License. See [LICENSE](LICENSE) for details.
